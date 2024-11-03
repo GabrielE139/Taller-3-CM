@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Registro"
+        android:textSize="30sp"
+        android:layout_margin="10dp"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        android:paddingTop="40dp"
+        android:paddingBottom="40dp"/>
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        app:srcCompat="@android:drawable/ic_input_add"
+        android:layout_below="@id/textView"
+        android:layout_centerHorizontal="true"
+        android:background="@null"
+        android:scaleType="centerCrop"
+        />
+
+    <EditText
+        android:id="@+id/editTextNombre"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imageButton"
+        android:layout_marginVertical="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="12dp"
+        android:hint="Nombre"
+        android:textSize="20sp"/>
+
+    <EditText
+        android:id="@+id/editTextApellido"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextNombre"
+        android:layout_marginVertical="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="12dp"
+        android:hint="Apellido"
+        android:textSize="20sp"/>
+
+    <EditText
+        android:id="@+id/editTextCorreo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextApellido"
+        android:layout_marginVertical="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="12dp"
+        android:hint="Correo"
+        android:textSize="20sp"/>
+
+    <EditText
+        android:id="@+id/editTextPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextCorreo"
+        android:layout_marginVertical="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="12dp"
+        android:hint="Contraseña"
+        android:textSize="20sp"
+        android:inputType="textPassword"
+        />
+
+    <EditText
+        android:id="@+id/editTextIdetificacion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextPassword"
+        android:layout_marginVertical="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="12dp"
+        android:hint="Número de identificación"
+        android:textSize="20sp"
+        />
+
+    <EditText
+        android:id="@+id/editTextLatitud"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextIdetificacion"
+        android:layout_marginVertical="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="12dp"
+        android:hint="Latitud"
+        android:textSize="20sp"
+        />
+
+    <EditText
+        android:id="@+id/editTextLonguitud"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextLatitud"
+        android:layout_marginVertical="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="12dp"
+        android:hint="Longuitud"
+        android:textSize="20sp"
+        />
+
+    <Button
+        android:id="@+id/buttonLogin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextLonguitud"
+        android:layout_marginTop="30dp"
+        android:textSize="20sp"
+        android:textAlignment="center"
+        android:layout_centerHorizontal="true"
+        android:text="Registrarse"
+        />
+
+
+
+</RelativeLayout>
