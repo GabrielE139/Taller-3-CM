@@ -7,4 +7,6 @@ data class Usuario(
     var password: String,
     var num_id: Double,
     var latitud: Double,
-    var longitud: Double)
+    var longitud: Double,
+    var imageUrl: String,
+    var disponible: Boolean)

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Taller-3</string>
+    <string name="title_activity_ubicacion_usuarios">UbicacionUsuarios</string>
 </resources>
