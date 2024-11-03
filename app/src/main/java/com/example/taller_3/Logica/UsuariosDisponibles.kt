@@ -38,20 +38,25 @@ class UsuariosDisponibles : AppCompatActivity() {
 
     fun initView() {
         mlista = findViewById(R.id.lista)
-        mCursor = createCursor()
-        mUsuariosAdapter = UsuariosAdapter(this, mCursor!!)
-        mlista?.adapter = mUsuariosAdapter
+        createCursor(object : CursorCallback {
+            override fun onCursorReady(cursor: MatrixCursor) {
+                mCursor = cursor
+                mUsuariosAdapter = UsuariosAdapter(this@UsuariosDisponibles, mCursor!!)
+                mlista?.adapter = mUsuariosAdapter
+            }
+        })
     }
 
-    private fun createCursor() : MatrixCursor {
-        val cursor = MatrixCursor(arrayOf("_id","nombre", "apellido", "imagen", "email", "latitud", "longitud"))
-        var i = 0;
+    private fun createCursor(callback: CursorCallback) {
+        val cursor = MatrixCursor(arrayOf("_id", "nombre", "apellido", "imagen", "email", "latitud", "longitud"))
+        var i = 0
         myRef = database.getReference(PATH_USERS)
         myRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (singleSnapshot in dataSnapshot.children) {
                     val myUser = singleSnapshot.getValue(Usuario::class.java)
-                    if(myUser!!.disponible){
+                    Log.i(TAG, "Encontró usuario: " + myUser?.nombre)
+                    if (myUser != null && myUser.disponible) {
                         cursor.addRow(arrayOf(
                             i,
                             myUser.nombre,
@@ -64,13 +69,17 @@ class UsuariosDisponibles : AppCompatActivity() {
                         i++
                     }
                 }
+                // Llama al callback una vez que el cursor esté listo
+                callback.onCursorReady(cursor)
             }
+
             override fun onCancelled(databaseError: DatabaseError) {
                 Log.w(TAG, "error en la consulta", databaseError.toException())
             }
         })
-        return cursor
     }
 
-
+    interface CursorCallback {
+        fun onCursorReady(cursor: MatrixCursor)
+    }
 }

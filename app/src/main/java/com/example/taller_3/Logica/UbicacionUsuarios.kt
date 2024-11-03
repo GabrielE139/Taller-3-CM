@@ -30,6 +30,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -51,6 +52,12 @@ class UbicacionUsuarios : AppCompatActivity(), OnMapReadyCallback {
 
     private var latitudUsuario = 0.0
     private var longitudUsuario = 0.0
+    private var longitud = 0.0
+    private var latitud = 0.0
+    private var lastLatitude: Double? = null
+    private var lastLongitude: Double? = null
+    private var lastPolyline: Polyline? = null
+
 
     val PATH_USERS = "users/"
     private val database = FirebaseDatabase.getInstance()
@@ -108,8 +115,8 @@ class UbicacionUsuarios : AppCompatActivity(), OnMapReadyCallback {
                 Log.i("LOCATION", "Latitud: " + location.latitude)
 
                 // Actualiza las coordenadas
-                val longitud = location.longitude
-                val latitud = location.latitude
+                longitud = location.longitude
+                latitud = location.latitude
 
                 otherLocation()
 
@@ -129,11 +136,14 @@ class UbicacionUsuarios : AppCompatActivity(), OnMapReadyCallback {
                         otherMarker = mMap.addMarker(MarkerOptions().position(posUsuario).title("El otro usuario está aquí"))
                     }
 
-                    mMap.addPolyline(
+                    lastPolyline?.remove()
+
+                    // Agrega la nueva línea y guarda una referencia
+                    lastPolyline = mMap.addPolyline(
                         PolylineOptions()
-                            .add(nuevaPosicion, posUsuario) // Puntos de inicio y fin
-                            .width(5f) // Ancho de la línea
-                            .color(Color.BLUE) // Color de la línea (puedes cambiarlo)
+                            .add(nuevaPosicion, posUsuario)
+                            .width(5f)
+                            .color(Color.BLUE)
                     )
                     // Mueve la cámara a la nueva posición
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(nuevaPosicion, 15f))
@@ -143,9 +153,9 @@ class UbicacionUsuarios : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
-    private fun otherLocation(){
-        var bundle = intent.getBundleExtra("bundle")!!
-        val email  = bundle.getString("email")!!
+    private fun otherLocation() {
+        val bundle = intent.getBundleExtra("bundle")!!
+        val email = bundle.getString("email")!!
         myRef = database.getReference(PATH_USERS)
         val query = myRef.orderByChild("email").equalTo(email)
 
@@ -153,15 +163,57 @@ class UbicacionUsuarios : AppCompatActivity(), OnMapReadyCallback {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (singleSnapshot in dataSnapshot.children) {
                     val myUser = singleSnapshot.getValue(Usuario::class.java)
-                    longitudUsuario = myUser!!.longitud
-                    latitudUsuario = myUser.latitud
+
+                    val newLatitude = myUser?.latitud
+                    val newLongitude = myUser?.longitud
+
+                    // Solo actualiza si hay cambios en latitud o longitud
+                    if (newLatitude != lastLatitude || newLongitude != lastLongitude) {
+                        lastLatitude = newLatitude
+                        lastLongitude = newLongitude
+
+                        if (newLatitude != null && newLongitude != null) {
+                            latitudUsuario = newLatitude
+                            longitudUsuario = newLongitude
+                            updateMapWithNewPosition()
+                        }
+                    }
                 }
             }
+
             override fun onCancelled(databaseError: DatabaseError) {
                 Log.w(TAG, "error en la consulta", databaseError.toException())
             }
         })
     }
+
+    private fun updateMapWithNewPosition() {
+        if (::mMap.isInitialized) {
+            val nuevaPosicion = LatLng(latitud, longitud)
+            val posUsuario = LatLng(latitudUsuario, longitudUsuario)
+
+            if (positionMarker != null && otherMarker != null) {
+                positionMarker?.position = nuevaPosicion
+                otherMarker?.position = posUsuario
+            } else {
+                positionMarker = mMap.addMarker(MarkerOptions().position(nuevaPosicion).title("Estás aquí").icon(BitmapDescriptorFactory.defaultMarker(
+                    BitmapDescriptorFactory.HUE_GREEN)) )
+                otherMarker = mMap.addMarker(MarkerOptions().position(posUsuario).title("El otro usuario está aquí"))
+            }
+
+            lastPolyline?.remove()
+
+            // Agrega la nueva línea y guarda una referencia
+            lastPolyline = mMap.addPolyline(
+                PolylineOptions()
+                    .add(nuevaPosicion, posUsuario)
+                    .width(5f)
+                    .color(Color.BLUE)
+            )
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(nuevaPosicion, 15f))
+        }
+    }
+
 
 
     private fun pedirPermiso(context: Activity, permisos: Array<String>, justificacion: String, idCode: Int) {

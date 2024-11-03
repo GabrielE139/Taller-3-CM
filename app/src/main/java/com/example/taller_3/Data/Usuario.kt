@@ -9,4 +9,7 @@ data class Usuario(
     var latitud: Double,
     var longitud: Double,
     var imageUrl: String,
-    var disponible: Boolean)
+    var disponible: Boolean){
+
+    constructor() : this("", "", "", "", 0.0, 0.0, 0.0, "", true)
+}
