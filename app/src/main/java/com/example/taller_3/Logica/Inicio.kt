@@ -13,6 +13,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -57,7 +58,7 @@ class Inicio : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_inicio)
 
-
+        auth = FirebaseAuth.getInstance()
 
         mapa = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapa.view?.visibility = View.GONE
@@ -195,7 +196,6 @@ class Inicio : AppCompatActivity(), OnMapReadyCallback {
         // Handle item selection
         return when (item.itemId) {
             R.id.menuLogOut -> {
-
                 FirebaseApp.initializeApp(this)
                 auth = FirebaseAuth.getInstance()
                 auth.signOut()
@@ -207,28 +207,20 @@ class Inicio : AppCompatActivity(), OnMapReadyCallback {
             R.id.EstablecerEstado -> {
                 val userId = auth.currentUser?.uid
                 if (userId != null) {
-                    val database = FirebaseDatabase.getInstance().reference
-                    val userStatusRef = database.child("users").child(userId).child("disponible")
+                    val userRef = database.getReference(PATH_USERS).child(userId)
+                    //Obtener el estado actual de disponibilidad del usuario
+                    userRef.child("disponible").get().addOnSuccessListener { dataSnapshot ->
+                        val currentAvailability = dataSnapshot.getValue(Boolean::class.java) ?: false
+                        //Cambiar el estado de disponibilidad al contrario del actual
+                        userRef.child("disponible").setValue(!currentAvailability)
 
-                    userStatusRef.get().addOnSuccessListener { snapshot ->
-                        val isAvailable = snapshot.getValue(Boolean::class.java) ?: false
-                        val newStatus = !isAvailable
-                        userStatusRef.setValue(newStatus).addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                val message = if (newStatus) {
-                                    "Ahora estás disponible"
-                                } else {
-                                    "Ahora estás desconectado"
-                                }
-                                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(this, "Error al actualizar el estado", Toast.LENGTH_SHORT).show()
-                            }
-                        }
+                        Toast.makeText(this, "Estado de disponibilidad actualizado", Toast.LENGTH_SHORT).show()
                     }
+
                 }
                 true
             }
+
             R.id.IrAUsuarios -> {
                 val intent = Intent(this, UsuariosDisponibles::class.java)
                 startActivity(intent)
@@ -238,12 +230,15 @@ class Inicio : AppCompatActivity(), OnMapReadyCallback {
         }
     }
     //inflate para el menu
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater: MenuInflater = menuInflater
         inflater.inflate(R.menu.activity_menu, menu)
         return true
     }
 
+    // Servicio que escucha cambios en la disponibilidad de los usuarios
+
+    private val usuariosDisponibilidad = mutableMapOf<String, Boolean?>() // Mapa para guardar el estado de disponibilidad previo
 
     fun escucharCambiosdeDisponibilidad() {
         myRef = database.getReference(PATH_USERS)
@@ -256,7 +251,23 @@ class Inicio : AppCompatActivity(), OnMapReadyCallback {
                     val myUser = singleSnapshot.getValue(Usuario::class.java)
                     if (myUser != null) {
                         val userKey = singleSnapshot.key
-                        val isAvailable = myUser.disponible
+                        val isAvailable = myUser.disponible ?: false
+
+                        // Verificar el estado anterior y compararlo con el actual
+                        if (usuariosDisponibilidad[userKey] != null && usuariosDisponibilidad[userKey] != isAvailable) {
+                            // Mostrar el Toast solo si ha habido un cambio de estado
+                            val mensaje = if (isAvailable) {
+                                "${myUser.nombre} se ha conectado"
+                            } else {
+                                "${myUser.nombre} se ha desconectado"
+                            }
+                            Toast.makeText(this@Inicio, mensaje, Toast.LENGTH_SHORT).show()
+                        }
+
+                        // Actualizar el mapa con el nuevo estado de disponibilidad
+                        usuariosDisponibilidad[userKey!!] = isAvailable
+
+                        // Añadir al cursor solo si está disponible
                         if (isAvailable) {
                             cursor.addRow(
                                 arrayOf(
@@ -269,20 +280,19 @@ class Inicio : AppCompatActivity(), OnMapReadyCallback {
                                     myUser.longitud
                                 )
                             )
-                            Toast.makeText(
-                                this@Inicio, "${myUser.nombre} se ha conectado", Toast.LENGTH_SHORT).show()
                             i++
-                        } else {
-                            Toast.makeText(
-                                this@Inicio, "${myUser.nombre} se ha desconectado", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
 
+                // Aquí puedes actualizar tu lista de usuarios disponibles en la UI con el cursor
             }
+
             override fun onCancelled(databaseError: DatabaseError) {
-                Log.w(TAG, "error en la consulta", databaseError.toException())
+                Log.w(TAG, "Error en la consulta", databaseError.toException())
             }
         })
     }
+
+
 }
